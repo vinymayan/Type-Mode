@@ -167,6 +167,7 @@ void InstallHook() {
 void OnMessage(SKSE::MessagingInterface::Message* message) {
     if (message->type == SKSE::MessagingInterface::kDataLoaded) {
         RE::UI::GetSingleton()->AddEventSink(MenuOpenCloseListener::GetSingleton());
+        RE::BSInputDeviceManager::GetSingleton()->AddEventSink(AttackStateManager::GetSingleton());
         Menu::LoadSettings();
         Menu::Register();
     }
