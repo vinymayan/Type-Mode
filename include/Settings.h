@@ -1,8 +1,6 @@
 #include <Windows.h>
-
 #include <map>
 #include <string>
-
 #include "SKSEMCP/SKSEMenuFramework.hpp"
 #include "rapidjson/document.h"
 #include "rapidjson/filereadstream.h"
@@ -11,14 +9,14 @@
 
 namespace Settings {
     // Checkboxes (baseado no seu MCM)
-    inline bool TypeMode = false;
+    inline bool TypeMode = true;
 
     // Keybinds (separados para teclado e controle)
     // Os valores padrão podem ser ajustados conforme necessário. Usei códigos de tecla comuns.
-    inline uint32_t TypeMode_k = 18;  // Teclado (E)
+    inline uint32_t TypeMode_k = 62;  // Teclado (E)
     inline uint32_t TypeMode_m = 0;
-    inline uint32_t TypeMode_g = 512;  // Controle (LB / L1)
-
+    inline uint32_t TypeMode_g = 0;  // Controle (LB / L1)
+    inline std::map<std::string, std::set<uint32_t>> MenuExceptions;
 }
 
 // Namespace para organizar as funções do nosso menu

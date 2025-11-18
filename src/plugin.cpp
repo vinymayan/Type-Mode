@@ -11,16 +11,16 @@ static bool g_IsMenuOpen = false;       // Sua flag "testar"
 // O tipo da função que estamos hookando
 using PollInputDevices_t = void(RE::BSTEventSource<RE::InputEvent*>*, RE::InputEvent**);
 static bool g_IsBlockerToggledOn = false;  // Define se o bloqueio está ATIVADO ou DESATIVADO.
+static std::set<std::string> g_OpenMenus;
+static std::recursive_mutex g_MenuLock;
     
 
 class MenuOpenCloseListener : public RE::BSTEventSink<RE::MenuOpenCloseEvent> {
 public:
     // Lista de menus vanilla que queremos rastrear
     // Esta é a mesma lista da sua função IsVanillaMenuOpen
-    const std::set<std::string> vanillaMenus = {
-        "Console",      "Dialogue Menu", "Crafting Menu",    "FavoritesMenu", "GiftMenu",  "InventoryMenu",
-        "Journal Menu", "LevelUp Menu",  "Lockpicking Menu", "MagicMenu",     "MapMenu",   "MessageBoxMenu",
-        "StatsMenu",    "TweenMenu",     "BarterMenu",       "ContainerMenu", "Book Menu", "SleepWaitMenu"};
+    const std::set<std::string> vanillaMenusList = {
+       };
 
     // Rastreia quantos menus vanilla estão abertos
     // Usamos static inline para que seja partilhado e inicializado
@@ -34,19 +34,17 @@ public:
     RE::BSEventNotifyControl ProcessEvent(const RE::MenuOpenCloseEvent* a_event,
                                           RE::BSTEventSource<RE::MenuOpenCloseEvent>*) override {
         if (a_event && a_event->menuName.c_str()) {
-            // Verifique se o menu do evento está na nossa lista de vanilla
-            if (vanillaMenus.count(a_event->menuName.c_str()) > 0) {
+            std::string menuName = a_event->menuName.c_str();
+            bool isTracked = (Settings::MenuExceptions.count(menuName) > 0);
+            logger::info("Event of Menu: {} is {}", menuName, a_event->opening ? "Opened" : "Closed");
+            if (isTracked) {
+                std::lock_guard<std::recursive_mutex> lock(g_MenuLock);
                 if (a_event->opening) {
-                    vanillaMenuCount++;
+                    g_OpenMenus.insert(menuName);
                 } else {
-                    // Garante que não fique negativo
-                    if (vanillaMenuCount > 0) {
-                        vanillaMenuCount--;
-                    }
+                    g_OpenMenus.erase(menuName);
                 }
             }
-            // Atualize a flag global SOMENTE se um menu vanilla estiver aberto
-            g_IsMenuOpen = (vanillaMenuCount > 0);
         }
         return RE::BSEventNotifyControl::kContinue;
     }
@@ -74,7 +72,7 @@ public:
             }
 
             auto buttonEvent = event->AsButtonEvent();
-            if (!buttonEvent) {
+            if (!buttonEvent->IsDown()) {
                 continue;
             }
 
@@ -88,15 +86,18 @@ public:
             bool isBlockBtnPressed = (device == RE::INPUT_DEVICE::kKeyboard && keyCode == Settings::TypeMode_k) ||
                                      (device == RE::INPUT_DEVICE::kMouse && keyCode == Settings::TypeMode_m) ||
                                      (device == RE::INPUT_DEVICE::kGamepad && keyCode == Settings::TypeMode_g);
-
-            if (isBlockBtnPressed) {
-                if (buttonEvent->IsDown()) {
+            if (Settings::TypeMode) {
+                if (isBlockBtnPressed) {
                     g_IsBlockerToggledOn = !g_IsBlockerToggledOn;
-                    logger::info("Bloqueio de entrada {}", g_IsBlockerToggledOn ? "ATIVADO" : "DESATIVADO");
+                    if (g_IsBlockerToggledOn) {
+                        RE::DebugNotification("Typing mode ON");
+                    } else {
+                        RE::DebugNotification("Typing mode OFF");
+                    }
                 }
-                
             }
         }
+        return RE::BSEventNotifyControl::kContinue;
     }
 
 };
@@ -106,11 +107,55 @@ static void hk_BlockerHook(RE::BSTEventSource<RE::InputEvent*>* a_dispatcher, RE
     // Ponteiros de função para os próximos hooks
     auto VanillaFunc = (PollInputDevices_t*)g_VanillaFuncPtr;
     auto NextHookFunc = (PollInputDevices_t*)g_NextHookPtr;
+    bool anyMenuOpen = false;
+    bool shouldAllowPassThrough = false;
     if (g_IsBlockerToggledOn) {
         return VanillaFunc(a_dispatcher, a_events);
     }
 
-    // Nenhum menu vanilla está aberto. Deixe o Modex (e outros) funcionar normalmente.
+    {
+        std::lock_guard<std::recursive_mutex> lock(g_MenuLock);
+        anyMenuOpen = !g_OpenMenus.empty();
+
+        // Se temos menus abertos, vamos verificar se a tecla pressionada é uma exceção
+        if (anyMenuOpen) {
+            // Itera pelos eventos de input atuais
+            for (auto event = *a_events; event; event = event->next) {
+                if (event->eventType == RE::INPUT_EVENT_TYPE::kButton) {
+                    auto btn = event->AsButtonEvent();
+                    if (btn) {
+                        uint32_t key = btn->GetIDCode();
+                        if (btn->GetDevice() == RE::INPUT_DEVICE::kMouse) key += 256;
+
+                        // Verifica para CADA menu aberto se essa tecla está na whitelist
+                        for (const auto& openMenuName : g_OpenMenus) {
+                            auto it = Settings::MenuExceptions.find(openMenuName);
+                            if (it != Settings::MenuExceptions.end()) {
+                                // Se a tecla atual está no set de teclas permitidas deste menu
+                                if (it->second.count(key) > 0) {
+                                    shouldAllowPassThrough = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (shouldAllowPassThrough) break;
+            }
+        }
+    }
+    
+
+    if (shouldAllowPassThrough) {
+        return NextHookFunc(a_dispatcher, a_events);
+    }
+
+    // 2. Se algum menu vanilla/rastreado estiver aberto e NÃO for uma exceção, chamamos VanillaFunc (Bloqueia Modex).
+    if (anyMenuOpen) {
+        return VanillaFunc(a_dispatcher, a_events);
+    }
+
+    // 3. Se nenhum menu estiver aberto, comportamento padrão (Modex funciona).
     return NextHookFunc(a_dispatcher, a_events);
 }
 
