@@ -10,6 +10,7 @@
 namespace Settings {
     // Checkboxes (baseado no seu MCM)
     inline bool TypeMode = true;
+    inline bool ShowLogs = true;
 
     // Keybinds (separados para teclado e controle)
     // Os valores padrão podem ser ajustados conforme necessário. Usei códigos de tecla comuns.
@@ -49,7 +50,6 @@ const std::map<int, const char*> g_gamepad_dx_to_name_map = {
     {9, "LT/L2"},
     {10, "RT/R2"}};
 
-// MAPA 2: Converte o Scan Code do DirectX para um Nome (o que você precisa exibir) - O seu mapa original.
 const std::map<int, const char*> g_dx_to_name_map = {
     {0, "[Nenhuma]"},
     {1, "Escape"},
@@ -77,6 +77,8 @@ const std::map<int, const char*> g_dx_to_name_map = {
     {23, "I"},
     {24, "O"},
     {25, "P"},
+    {26, "["},          // <-- NOVA (Abre Colchetes)
+    {27, "]"},          // <-- NOVA (Fecha Colchetes)
     {28, "Enter"},
     {29, "Left Ctrl"},
     {30, "A"},
@@ -89,6 +91,8 @@ const std::map<int, const char*> g_dx_to_name_map = {
     {37, "K"},
     {38, "L"},
     {39, ";"},
+    {40, "'"},          // <-- NOVA (Aspas simples)
+    {41, "`"},          // <-- NOVA (Crase/Tilde)
     {42, "Left Shift"},
     {43, "\\"},
     {44, "Z"},
@@ -104,6 +108,7 @@ const std::map<int, const char*> g_dx_to_name_map = {
     {54, "Right Shift"},
     {56, "Left Alt"},
     {57, "Spacebar"},
+    {58, "Caps Lock"},  // <-- NOVA (A que você pediu)
     {59, "F1"},
     {60, "F2"},
     {61, "F3"},
@@ -114,11 +119,15 @@ const std::map<int, const char*> g_dx_to_name_map = {
     {66, "F8"},
     {67, "F9"},
     {68, "F10"},
+    {69, "Num Lock"},    // <-- NOVA
+    {70, "Scroll Lock"}, // <-- NOVA
     {87, "F11"},
     {88, "F12"},
     {156, "Keypad Enter"},
     {157, "Right Ctrl"},
+    {183, "Print Screen"}, // <-- NOVA (Geralmente SysRq)
     {184, "Right Alt"},
+    {197, "Pause"},        // <-- NOVA
     {199, "Home"},
     {200, "Up Arrow"},
     {201, "PgUp"},
@@ -129,6 +138,9 @@ const std::map<int, const char*> g_dx_to_name_map = {
     {209, "PgDown"},
     {210, "Insert"},
     {211, "Delete"},
+    {219, "Left Windows"},  // <-- NOVA
+    {220, "Right Windows"}, // <-- NOVA
+    {221, "Apps Menu"},     // <-- NOVA
     //{256, "Left Click"},
     {257, "Right Click"},
     {258, "Middle Mouse Button"},
@@ -137,21 +149,20 @@ const std::map<int, const char*> g_dx_to_name_map = {
     {261, "Mouse 6"},
     {262, "Mouse 7"},
     {263, "Mouse 8"},
+    // Teclado Numérico (Keypad)
     {55, "Keypad *"},
     {181, "Keypad /"},
-    {74, "Keypad -"},  // <-- ADICIONADO
-    {78, "Keypad +"},  // <-- ADICIONADO
-    {73, "Keypad 9"},  // <-- ADICIONADO
-    {72, "Keypad 8"},  // <-- ADICIONADO
-    {71, "Keypad 7"},  // <-- ADICIONADO
-    {77, "Keypad 6"},  // <-- ADICIONADO
-    {76, "Keypad 5"},  // <-- ADICIONADO
-    {75, "Keypad 4"},  // <-- ADICIONADO
-    {81, "Keypad 3"},  // <-- ADICIONADO
-    {80, "Keypad 2"},  // <-- ADICIONADO
-    {79, "Keypad 1"},  // <-- ADICIONADO
-    {82, "Keypad 0"},  // <-- ADICIONADO
-    {83, "Keypad ."},  // <-- ADICIONADO
-    //{261, "Scroll Up"},
-    //{262, "Scroll Down"}
+    {74, "Keypad -"},
+    {78, "Keypad +"},
+    {71, "Keypad 7"},
+    {72, "Keypad 8"},
+    {73, "Keypad 9"},
+    {75, "Keypad 4"},
+    {76, "Keypad 5"},
+    {77, "Keypad 6"},
+    {79, "Keypad 1"},
+    {80, "Keypad 2"},
+    {81, "Keypad 3"},
+    {82, "Keypad 0"},
+    {83, "Keypad ."}
 };

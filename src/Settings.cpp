@@ -94,6 +94,9 @@ namespace Menu {
 
         ImGui::Spacing();
         ImGui::Separator();
+        if (ImGui::Checkbox("Show menu name in logs", &Settings::ShowLogs)) settings_changed = true;
+        ImGui::Spacing();
+        ImGui::Separator();
         ImGui::Text("Menu Input Exceptions (Unblocked Keys)");
         ImGui::TextWrapped(
             "Add menus to be auto block and which keys should be whitelisted to open a menu");
@@ -208,6 +211,7 @@ namespace Menu {
         rapidjson::Document::AllocatorType& allocator = doc.GetAllocator();
 
         doc.AddMember("TypeMode", Settings::TypeMode, allocator);
+        doc.AddMember("ShowLogs", Settings::ShowLogs, allocator);
         doc.AddMember("TypeMode_k", Settings::TypeMode_k, allocator);
         doc.AddMember("TypeMode_m", Settings::TypeMode_m, allocator);
         doc.AddMember("TypeMode_g", Settings::TypeMode_g, allocator);
@@ -255,6 +259,7 @@ namespace Menu {
 
             if (doc.IsObject()) {
                 if (doc.HasMember("TypeMode")) Settings::TypeMode = doc["TypeMode"].GetBool();
+                if (doc.HasMember("ShowLogs")) Settings::ShowLogs = doc["ShowLogs"].GetBool();
                 if (doc.HasMember("TypeMode_k")) Settings::TypeMode_k = doc["TypeMode_k"].GetInt();
                 if (doc.HasMember("TypeMode_m")) Settings::TypeMode_m = doc["TypeMode_m"].GetInt();
                 if (doc.HasMember("TypeMode_g")) Settings::TypeMode_g = doc["TypeMode_g"].GetInt();

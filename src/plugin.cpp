@@ -36,7 +36,9 @@ public:
         if (a_event && a_event->menuName.c_str()) {
             std::string menuName = a_event->menuName.c_str();
             bool isTracked = (Settings::MenuExceptions.count(menuName) > 0);
-            logger::info("Event of Menu: {} is {}", menuName, a_event->opening ? "Opened" : "Closed");
+            if (Settings::ShowLogs) {
+                logger::info("Event of Menu: {} is {}", menuName, a_event->opening ? "Opened" : "Closed");
+            }
             if (isTracked) {
                 std::lock_guard<std::recursive_mutex> lock(g_MenuLock);
                 if (a_event->opening) {
